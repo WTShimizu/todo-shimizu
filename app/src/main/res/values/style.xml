@@ -12,7 +12,7 @@
         <item name="colorOnPrimary">@color/todo</item>
     </style>
     <style name="MyDatePickerStyle" parent="@android:style/Widget.Material.DatePicker">
-        <item name="android:headerBackground">@color/todo</item>
+        <item name="android:headerBackground">@color/white</item>
     </style>
     <style name="buttonBarButtonStyle" parent="Widget.AppCompat.Button.Colored">
     </style>
