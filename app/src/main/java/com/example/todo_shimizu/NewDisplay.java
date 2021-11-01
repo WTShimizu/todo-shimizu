@@ -22,7 +22,9 @@ import android.widget.TextView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;
@@ -181,10 +183,18 @@ public class NewDisplay extends Fragment implements DatePickerDialog.OnDateSetLi
                         day = String.valueOf(date.get(Calendar.DAY_OF_MONTH));
                     }
 
-
                     String compDay = String.valueOf(date.get(Calendar.YEAR)) +
                             "/" + month + "/" + day;
-                    mainActivity.insertData(titleText, exp, statusFrag, dayText, compDay);
+
+                    DataList dataList = new DataList();
+                    dataList.setTitle(titleText);
+                    dataList.setExp(exp);
+                    dataList.setStatus(statusFrag ? "0" : "1");
+                    dataList.setDay(compDay.replace("/", "").replace("/", ""));
+
+                    ThreadHttp threadHttp = new ThreadHttp(dataList);
+                    threadHttp.start();
+//                    mainActivity.insertData(titleText, exp, statusFrag, dayText, compDay);
                     AddDisplay addDisplay = new AddDisplay();
                     mainActivity.replaceFragmentManager(addDisplay);
                 } else {
@@ -234,4 +244,15 @@ public class NewDisplay extends Fragment implements DatePickerDialog.OnDateSetLi
 //        DialogFragment newFragment = new DatePick();
 //        newFragment.show(getFragmentManager(), "datePicker");
 //    }
+
+    class ThreadHttp extends Thread {
+        DataList dataLists;
+        public ThreadHttp(DataList dataList) {
+            dataLists = dataList;
+        }
+
+        public void run() {
+            Log.d("tag", new HttpRequest().postRequest(true, dataLists));
+        }
+    }
 }
