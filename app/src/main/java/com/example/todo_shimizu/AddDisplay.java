@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,8 +19,16 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;
@@ -30,52 +39,73 @@ public class AddDisplay extends Fragment {
     private TextView compButton;
     private TextView notCompButton;
     private MainActivity mainActivity;
+    private ListView listView;
+    ArrayList<Integer> ids;
+    SimpleAdapter adapter;
+    Handler handler;
+
+    class ThreadHttp extends Thread {
+        public void run() {
+            List<DataList> dataLists = new HttpRequest().getRequest(true);
+            if (dataLists != null) {
+                createList(dataLists);
+            }
+        }
+    }
+    private void createList(List<DataList> dataLists) {
+        int count = 0;
+        Map<String,Object> map;
+        ArrayList<Map<String, Object>> data = new ArrayList<>();
+        final String[] FROM = {"title", "day", "day2"};
+        final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
+
+        for (DataList dataList : dataLists) {
+            String title = dataList.mTitle;
+            int day = Integer.parseInt(dataList.mDay);
+            int status = Integer.parseInt(dataList.getStatus());
+            if (count > 20) {
+                break;
+            }
+//            mainActivity.updateId(i+1);
+            StringBuilder dayMold = new StringBuilder();
+            if (day == 0) {
+                dayMold.append("未入力");
+            } else {
+                dayMold.append(String.valueOf(day));
+                dayMold.insert(4, "/");
+                dayMold.insert(7, "/");
+            }
+
+            ids.add(status);
+
+            map =  new HashMap<>();
+            map.put("title", title);
+            map.put("day", "未完了");
+            map.put("day2", dayMold.toString()); // 完了済み
+            data.add(map);
+        }
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                adapter = new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
+                listView.setAdapter(adapter);
+            }
+        });
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.add_page, container, false);
         mainActivity = (MainActivity) getActivity();
-
+        listView = view.findViewById(R.id.addListView);
+        ids = new ArrayList<>();
         final String[] FROM = {"title", "day", "day2"};
         final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
+        handler = new Handler();
 
-        Cursor cursor = mainActivity.readData(compFrag);
-        ListView listView = view.findViewById(R.id.addListView);
-        ArrayList<Map<String, Object>> data = new ArrayList<>();
-        ArrayList<Integer> ids = new ArrayList<>();
-        Map<String,Object> map;
-        for (int i = 0; i < cursor.getCount(); i++) {
-            if (i > 20) {
-                break;
-            }
-//            mainActivity.updateId(i+1);
-            StringBuilder dayMold = new StringBuilder();
-            if (cursor.getInt(1) == 0) {
-                dayMold.append("未入力");
-            } else {
-                dayMold.append(String.valueOf(cursor.getInt(1)));
-                dayMold.insert(4, "/");
-                dayMold.insert(7, "/");
-            }
-
-            ids.add(cursor.getInt(4));
-
-            map =  new HashMap<>();
-            map.put("title", cursor.getString(0));
-            map.put("day", "未完了");
-            map.put("day2", dayMold.toString()); // 完了済み
-            data.add(map);
-
-            Log.d("tag", "listid" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                    + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-            cursor.moveToNext();
-        }
-        cursor.close();
-
-        SimpleAdapter adapter =
-                new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
-        listView.setAdapter(adapter);
-
+        ThreadHttp threadHttp = new ThreadHttp();
+        threadHttp.start();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
