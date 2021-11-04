@@ -22,9 +22,7 @@ import android.widget.TextView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.List;
 import java.util.TimeZone;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;

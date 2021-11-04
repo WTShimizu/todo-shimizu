@@ -22,8 +22,8 @@ public class HttpRequest {
     String READ_UNF_URL = "https://www.whaletech.work/todo-shimizu/read_unfinish.php";
     String STORE_COMP_URL = "https://www.whaletech.work/todo-shimizu/store_complete.php";
     String STORE_UNF_URL = "https://www.whaletech.work/todo-shimizu/store_unfinish.php";
-    String DELE_COMP_URL = "https://www.whaletech.work/todo-shimizu/destory_complate.php";
-    String DELE_UNF_URL = "https://www.whaletech.work/todo-shimizu/destory_unfinish.php";
+    String DEL_COMP_URL = "https://www.whaletech.work/todo-shimizu/destory_complate.php";
+    String DEL_UNF_URL = "https://www.whaletech.work/todo-shimizu/destory_unfinish.php";
     String EDIT_COMP_URL = "https://www.whaletech.work/todo-shimizu/destory_complate.php";
     String EDIT_UNF_URL = "https://www.whaletech.work/todo-shimizu/destory_unfinish.php";
     public List<DataList> getRequest(boolean frag) {
@@ -59,6 +59,7 @@ public class HttpRequest {
         return null;
     }
 
+    // ID指定
     public DataList getIdRequest(boolean frag, int id) {
         // HttpURLConnectionの作成
         try {
@@ -135,13 +136,14 @@ public class HttpRequest {
         return "NO";
     }
 
+    // Delete
     public String deleteRequest(boolean frag, int id) {
         try {
             URL url;
             if (frag) {
-                url = new URL(DELE_COMP_URL);
+                url = new URL(DEL_COMP_URL);
             } else {
-                url = new URL(DELE_UNF_URL);
+                url = new URL(DEL_UNF_URL);
             }
             String sendDataJson = "{\"id\":" + "\"" + id + "\"" + "}";
 
@@ -185,7 +187,7 @@ public class HttpRequest {
                 url = new URL(EDIT_UNF_URL);
             }
             String sendDataJson = "{\"id\":" + "\"" + dataList.mId + "\""
-                    + ",\"title\":" + "\"" + dataList.mTitle +
+                    + ",\"title\":" + "\"" + dataList.mTitle + "\"" +
                     ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
                     + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\"" + "}";
 

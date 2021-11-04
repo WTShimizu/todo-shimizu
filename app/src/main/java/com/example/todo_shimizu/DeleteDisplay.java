@@ -2,12 +2,11 @@ package com.example.todo_shimizu;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,60 +21,83 @@ import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;
 
 public class DeleteDisplay extends Fragment {
-    private SQLiteDatabase db;
     private boolean compFrag = false;
     private TextView compButton;
     private TextView notCompButton;
     private ListView listView;
     protected MyListItem myListItem;
     private MainActivity mainActivity;
+
+    ArrayList<Integer> ids;
+    SimpleAdapter adapter;
+    Handler handler;
+    int mListCount;
+
+    public void createDelList(List<DataList> dataLists) {
+        int count = 0;
+        Map<String,Object> map;
+        ArrayList<Map<String, Object>> data = new ArrayList<>();
+        final String[] FROM = {"title", "day", "day2"};
+        final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
+//        ArrayList<Integer> ids = new ArrayList<>();
+        ids = new ArrayList<>();
+        for (DataList dataList : dataLists) {
+            ids.add(dataList.getId());
+            String title = dataList.getTitle();
+            int day = Integer.parseInt(dataList.getDay());
+            int status = Integer.parseInt(dataList.getStatus());
+            if (count > mListCount) {
+                break;
+            }
+//            mainActivity.updateId(i+1);
+            StringBuilder dayMold = new StringBuilder();
+            if (day == 0) {
+                dayMold.append("未入力");
+            } else {
+                dayMold.append(String.valueOf(day));
+                dayMold.insert(4, "/");
+                dayMold.insert(7, "/");
+            }
+
+            map =  new HashMap<>();
+            map.put("title", title);
+            map.put("day", "未完了");
+            map.put("day2", dayMold.toString()); // 完了済み
+            data.add(map);
+        }
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                adapter = new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
+                listView.setAdapter(adapter);
+            }
+        });
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.delete_page, container, false);
         mainActivity = (MainActivity) getActivity();
 
+        listView = view.findViewById(R.id.deleteListView);
+        ids = new ArrayList<>();
         final String[] FROM = {"title", "day", "day2"};
         final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
+        handler = new Handler();
+        // 初期表示List数
+        mListCount = 20;
 
-        Cursor cursor = mainActivity.readData(compFrag);
-        ListView listView = view.findViewById(R.id.deleteListView);
-        ArrayList<Map<String, Object>> data = new ArrayList<>();
-        ArrayList<Integer> ids = new ArrayList<>();
-        Map<String,Object> map;
-        for (int i = 0; i < cursor.getCount(); i++) {
-            if (i > 20) {
-                break;
-            }
-
-            StringBuilder dayMold = new StringBuilder();
-            if (cursor.getInt(1) == 0) {
-                dayMold.append("未入力");
-            } else {
-                dayMold.append(String.valueOf(cursor.getInt(1)));
-                dayMold.insert(4, "/");
-                dayMold.insert(7, "/");
-            }
-            map =  new HashMap<>();
-            map.put("title", cursor.getString(0));
-            map.put("day", "");
-            map.put("day2", dayMold.toString());
-            data.add(map);
-            ids.add(cursor.getInt(4));
-            Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                    + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-            cursor.moveToNext();
-        }
-        cursor.close();
-
-        SimpleAdapter adapter =
-                new SimpleAdapter(getActivity(), data, R.layout.notcomp_listview, FROM, TO);
-        listView.setAdapter(adapter);
+        Threader.DeleteListThreadHttp threadHttp =
+                new Threader.DeleteListThreadHttp(DeleteDisplay.this, compFrag);
+        threadHttp.start();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -87,7 +109,9 @@ public class DeleteDisplay extends Fragment {
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mainActivity.selectDelete(String.valueOf(ids.get(i)), compFrag);
+                        Threader.DeleteThreadHttp deleteThreadHttp =
+                                new Threader.DeleteThreadHttp(ids.get(i), compFrag);
+                        deleteThreadHttp.start();
                         AddDisplay addDisplay = new AddDisplay();
                         mainActivity.replaceFragmentManager(addDisplay);
                     }
@@ -111,50 +135,10 @@ public class DeleteDisplay extends Fragment {
                 if (listView.getLastVisiblePosition() == (adapter.getCount() - 1)){
                     int position = listView.getFirstVisiblePosition();
                     int yOffset = listView.getChildAt(0).getTop();
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    for (int x = 0; x < cursor.getCount(); x++) {
-                        if (x > adapter.getCount()+20) {
-                            break;
-                        }
-
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-                        map =  new HashMap<>();
-                        if (compFrag) {
-                            StringBuilder compDayMold = new StringBuilder();
-                            compDayMold.append(String.valueOf(cursor.getInt(1)));
-                            compDayMold.insert(4, "/");
-                            compDayMold.insert(7, "/");
-                            map.put("day", compDayMold);
-                        } else {
-                            map.put("day", "");
-                        }
-                        map.put("title", cursor.getString(0));
-                        map.put("day2", dayMold.toString());
-                        data.add(map);
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
-
-                    cursor.close();
-                    int settingLayout;
-                    if (compFrag) {
-                        settingLayout = R.layout.listview;
-                    } else {
-                        settingLayout = R.layout.notcomp_listview;
-                    }
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, settingLayout, FROM, TO);
-                    listView.setAdapter(adapter);
+                    mListCount = mListCount + 20;
+                    Threader.DeleteListThreadHttp threadHttp =
+                            new Threader.DeleteListThreadHttp(DeleteDisplay.this, compFrag);
+                    threadHttp.start();
                     adapter.notifyDataSetChanged();
                     listView.setSelectionFromTop(position, yOffset);
                 }
@@ -204,35 +188,10 @@ public class DeleteDisplay extends Fragment {
                     compButton.setBackground(notSelect);
                     compButton.setTextColor(Color.GRAY);
 
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        if (i > adapter.getCount()+20) {
-                            break;
-                        }
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-                        map =  new HashMap<>();
-                        map.put("title", cursor.getString(0));
-                        map.put("day", "");
-                        map.put("day2", dayMold.toString());
-                        data.add(map);
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
-                    cursor.close();
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, R.layout.notcomp_listview, FROM, TO);
-                    listView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                    mListCount = 20;
+                    Threader.DeleteListThreadHttp threadHttp =
+                            new Threader.DeleteListThreadHttp(DeleteDisplay.this, compFrag);
+                    threadHttp.start();
                 }
             }
         });
@@ -263,42 +222,10 @@ public class DeleteDisplay extends Fragment {
                     notCompButton.setBackground(notSelect);
                     notCompButton.setTextColor(Color.GRAY);
 
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        if (i > adapter.getCount()+20) {
-                            break;
-                        }
-
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-
-                        StringBuilder compDayMold = new StringBuilder();
-                        compDayMold.append(String.valueOf(cursor.getInt(5)));
-                        compDayMold.insert(4, "/");
-                        compDayMold.insert(7, "/");
-                        ids.add(cursor.getInt(4));
-                        map =  new HashMap<>();
-                        map.put("title", cursor.getString(0));
-                        map.put("day", compDayMold.toString());
-                        map.put("day2", dayMold.toString()); // 完了済み
-                        data.add(map);
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
-                    cursor.close();
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
-                    listView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                    mListCount = 20;
+                    Threader.DeleteListThreadHttp threadHttp =
+                            new Threader.DeleteListThreadHttp(DeleteDisplay.this, compFrag);
+                    threadHttp.start();
                 }
             }
         });

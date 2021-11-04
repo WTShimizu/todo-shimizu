@@ -217,7 +217,7 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
                         Threader.NewThreadHttp newHttp = new Threader.NewThreadHttp(dataList);
                         newHttp.start();
 
-                        Threader.DeleteThreadHttp deleteThreadHttp = new Threader.DeleteThreadHttp(id);
+                        Threader.DeleteThreadHttp deleteThreadHttp = new Threader.DeleteThreadHttp(id, status);
                         deleteThreadHttp.start();
                     } else {
                         dataList.setId(id);

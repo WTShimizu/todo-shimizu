@@ -52,7 +52,7 @@ public class AddDisplay extends Fragment {
         final String[] FROM = {"title", "day", "day2"};
         final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
 //        ArrayList<Integer> ids = new ArrayList<>();
-
+        ids = new ArrayList<>();
         for (DataList dataList : dataLists) {
             ids.add(dataList.getId());
             String title = dataList.getTitle();
@@ -93,13 +93,11 @@ public class AddDisplay extends Fragment {
         mainActivity = (MainActivity) getActivity();
         listView = view.findViewById(R.id.addListView);
         ids = new ArrayList<>();
-        final String[] FROM = {"title", "day", "day2"};
-        final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
         handler = new Handler();
         // 初期表示List数
         mListCount = 20;
 
-        Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(this);
+        Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(this, compFrag);
         threadHttp.start();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -123,7 +121,7 @@ public class AddDisplay extends Fragment {
                     int yOffset = listView.getChildAt(0).getTop();
 
                     mListCount = mListCount + 20;
-                    Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(AddDisplay.this);
+                    Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(AddDisplay.this, compFrag);
                     threadHttp.start();
                 }
             }
@@ -170,37 +168,11 @@ public class AddDisplay extends Fragment {
                     compButton.setBackground(notSelect);
                     compButton.setTextColor(Color.GRAY);
 
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    ids.clear();
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        if (i > 20) {
-                            break;
-                        }
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-                        ids.add(cursor.getInt(4));
-                        map =  new HashMap<>();
-                        map.put("title", cursor.getString(0));
-                        map.put("day", "未完了");
-                        map.put("day2", dayMold.toString());
-                        data.add(map);
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
-                    cursor.close();
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
-                    listView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                    mListCount = 20;
+                    Threader.AddThreadHttp threadHttp =
+                            new Threader.AddThreadHttp(AddDisplay.this, compFrag);
+
+                    threadHttp.start();
                 }
             }
         });
@@ -221,42 +193,10 @@ public class AddDisplay extends Fragment {
                     notCompButton.setBackground(notSelect);
                     notCompButton.setTextColor(Color.GRAY);
 
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    ids.clear();
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        if (i > 20) {
-                            break;
-                        }
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-
-                        StringBuilder compDayMold = new StringBuilder();
-                        compDayMold.append(String.valueOf(cursor.getInt(5)));
-                        compDayMold.insert(4, "/");
-                        compDayMold.insert(7, "/");
-                        ids.add(cursor.getInt(4));
-                        map =  new HashMap<>();
-                        map.put("title", cursor.getString(0));
-                        map.put("day", compDayMold.toString());
-                        map.put("day2", dayMold.toString()); // 完了済み
-                        data.add(map);
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
-                    cursor.close();
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
-                    listView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                    mListCount = 20;
+                    Threader.AddThreadHttp threadHttp =
+                            new Threader.AddThreadHttp(AddDisplay.this, compFrag);
+                    threadHttp.start();
                 }
             }
         });
