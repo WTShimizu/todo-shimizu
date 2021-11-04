@@ -43,27 +43,22 @@ public class AddDisplay extends Fragment {
     ArrayList<Integer> ids;
     SimpleAdapter adapter;
     Handler handler;
+    int mListCount;
 
-    class ThreadHttp extends Thread {
-        public void run() {
-            List<DataList> dataLists = new HttpRequest().getRequest(true);
-            if (dataLists != null) {
-                createList(dataLists);
-            }
-        }
-    }
-    private void createList(List<DataList> dataLists) {
+    public void createList(List<DataList> dataLists) {
         int count = 0;
         Map<String,Object> map;
         ArrayList<Map<String, Object>> data = new ArrayList<>();
         final String[] FROM = {"title", "day", "day2"};
         final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
+//        ArrayList<Integer> ids = new ArrayList<>();
 
         for (DataList dataList : dataLists) {
-            String title = dataList.mTitle;
-            int day = Integer.parseInt(dataList.mDay);
+            ids.add(dataList.getId());
+            String title = dataList.getTitle();
+            int day = Integer.parseInt(dataList.getDay());
             int status = Integer.parseInt(dataList.getStatus());
-            if (count > 20) {
+            if (count > mListCount) {
                 break;
             }
 //            mainActivity.updateId(i+1);
@@ -75,8 +70,6 @@ public class AddDisplay extends Fragment {
                 dayMold.insert(4, "/");
                 dayMold.insert(7, "/");
             }
-
-            ids.add(status);
 
             map =  new HashMap<>();
             map.put("title", title);
@@ -103,8 +96,10 @@ public class AddDisplay extends Fragment {
         final String[] FROM = {"title", "day", "day2"};
         final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
         handler = new Handler();
+        // 初期表示List数
+        mListCount = 20;
 
-        ThreadHttp threadHttp = new ThreadHttp();
+        Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(this);
         threadHttp.start();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -126,48 +121,10 @@ public class AddDisplay extends Fragment {
                 if (listView.getLastVisiblePosition() == (adapter.getCount() - 1)){
                     int position = listView.getFirstVisiblePosition();
                     int yOffset = listView.getChildAt(0).getTop();
-                    Cursor cursor = mainActivity.readData(compFrag);
-                    ArrayList data = new ArrayList<>();
-                    Map<String,Object> map;
-                    for (int x = 0; x < cursor.getCount(); x++) {
-                        if (x > adapter.getCount()+20) {
-                            break;
-                        }
-                        StringBuilder dayMold = new StringBuilder();
-                        if (cursor.getInt(1) == 0) {
-                            dayMold.append("未入力");
-                        } else {
-                            dayMold.append(String.valueOf(cursor.getInt(1)));
-                            dayMold.insert(4, "/");
-                            dayMold.insert(7, "/");
-                        }
-                        map =  new HashMap<>();
-                        if (compFrag) {
-                            StringBuilder compDayMold = new StringBuilder();
-                            compDayMold.append(String.valueOf(cursor.getInt(1)));
-                            compDayMold.insert(4, "/");
-                            compDayMold.insert(7, "/");
-                            map.put("day", compDayMold);
-                        } else {
-                            map.put("day", "未完了");
-                        }
-                        map.put("title", cursor.getString(0));
-                        map.put("day2", dayMold.toString()); // 完了済み
-                        data.add(map);
-                        ids.add(cursor.getInt(4));
-                        Log.d("tag", "id" + cursor.getInt(4) + " date  " +cursor.getString(0) + "      :" + String.valueOf(cursor.getInt(1))
-                                + "      :" + cursor.getString(2) + "      :" + cursor.getString(3));
-                        cursor.moveToNext();
-                    }
 
-                    cursor.close();
-                    int settingLayout = R.layout.listview;
-
-                    SimpleAdapter adapter =
-                            new SimpleAdapter(getActivity(), data, settingLayout, FROM, TO);
-                    listView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                    listView.setSelectionFromTop(position, yOffset);
+                    mListCount = mListCount + 20;
+                    Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(AddDisplay.this);
+                    threadHttp.start();
                 }
             }
 

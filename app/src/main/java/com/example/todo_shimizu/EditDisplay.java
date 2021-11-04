@@ -2,7 +2,6 @@ package com.example.todo_shimizu;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -23,6 +22,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;
@@ -40,9 +40,21 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
     public DatePickerDialog.OnDateSetListener mDateSetListener;
     private boolean status = false;
     private int id = 0;
+    EditText mTitle;
+    TextView mDateButton;
+    EditText mDetailsEdit;
 
-    public EditDisplay() {
-
+    public void createEdit(DataList dataList) {
+        mTitle.setText(dataList.getTitle());
+        StringBuilder dayMold = new StringBuilder();
+        if (Integer.parseInt(dataList.getStatus()) == 0) {
+            mDateButton.setText("");
+        } else {
+            dayMold.append(String.valueOf(dataList.getDay()));
+            dayMold.insert(4, "/");
+            dayMold.insert(7, "/");
+            mDateButton.setText(dayMold.toString());
+        }
     }
 
     @Override
@@ -65,32 +77,15 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
         statusFrag = status;
 
         MainActivity mainActivity = (MainActivity) getActivity();
-        Cursor cursor = mainActivity.readData(status);
-        for (int i = 0; i < cursor.getCount(); i++) {
-            if (cursor.getInt(4) == id) {
-                break;
-            }
-            cursor.moveToNext();
-        }
-        EditText title = view.findViewById(R.id.editTitleEdit);
-        title.setText(cursor.getString(0));
+        Threader.EditViewThreadHttp threadHttp = new Threader.EditViewThreadHttp(id, this);
+        threadHttp.start();
 
-        TextView dateButton = view.findViewById(R.id.editDateButton);
-        StringBuilder dayMold = new StringBuilder();
-        if (cursor.getInt(1) == 0) {
-            dateButton.setText("");
-        } else {
-            dayMold.append(String.valueOf(cursor.getInt(1)));
-            dayMold.insert(4, "/");
-            dayMold.insert(7, "/");
-            dateButton.setText(dayMold.toString());
-        }
-
-        EditText detailsEdit = view.findViewById(R.id.editDetailsEdit);
-        detailsEdit.setText(cursor.getString(2));
+        mTitle = view.findViewById(R.id.editTitleEdit);
+        mDateButton = view.findViewById(R.id.editDateButton);
+        mDetailsEdit = view.findViewById(R.id.editDetailsEdit);
 
 
-        dateButton.setOnClickListener(new View.OnClickListener() {
+        mDetailsEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 DialogFragment newFragment = new DatePick();
@@ -99,6 +94,14 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
             }
         });
 
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment newFragment = new DatePick();
+                newFragment.setTargetFragment(EditDisplay.this, 0);
+                newFragment.show(getFragmentManager(), "datePicker");
+            }
+        });
         ImageView dateIcon = view.findViewById(R.id.editDateIcon);
         dateIcon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,14 +180,14 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
         endButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("tag", title.getText().toString());
-                if (title.getText().toString().length() != 0) {
+                Log.d("tag", mTitle.getText().toString());
+                if (mTitle.getText().toString().length() != 0) {
                     // タイトルが未記入でない場合
-                    String titleText = title.getText().toString();
+                    String titleText = mTitle.getText().toString();
 
-                    String exp = detailsEdit.getText().toString();
+                    String exp = mDetailsEdit.getText().toString();
 
-                    dayText = dateButton.getText().toString();
+                    dayText = mDateButton.getText().toString();
                     MainActivity mainActivity = (MainActivity) getActivity();
                     final Calendar date = Calendar.getInstance(TimeZone.getTimeZone("Asia/Tokyo"));
                     String month;
@@ -204,11 +207,22 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
 
                     String compDay = String.valueOf(date.get(Calendar.YEAR)) +
                             "/" + month + "/" + day;
+                    DataList dataList = new DataList();
+                    dataList.setTitle(titleText);
+                    dataList.setExp(exp);
+                    dataList.setStatus(statusFrag ? "0" : "1");
+                    dataList.setDay(compDay.replace("/", "").replace("/", ""));
+
                     if (status != statusFrag) {
-                        mainActivity.insertData(titleText, exp, statusFrag, dayText, compDay);
-                        mainActivity.selectDelete(String.valueOf(cursor.getInt(4)), status);
+                        Threader.NewThreadHttp newHttp = new Threader.NewThreadHttp(dataList);
+                        newHttp.start();
+
+                        Threader.DeleteThreadHttp deleteThreadHttp = new Threader.DeleteThreadHttp(id);
+                        deleteThreadHttp.start();
                     } else {
-                        mainActivity.editData(titleText, exp, status, dayText, compDay, cursor.getInt(4));
+                        dataList.setId(id);
+                        Threader.EditThreadHttp newHttp = new Threader.EditThreadHttp(dataList);
+                        newHttp.start();
                     }
                     AddDisplay addDisplay = new AddDisplay();
                     mainActivity.replaceFragmentManager(addDisplay);

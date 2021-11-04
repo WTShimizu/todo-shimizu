@@ -192,7 +192,7 @@ public class NewDisplay extends Fragment implements DatePickerDialog.OnDateSetLi
                     dataList.setStatus(statusFrag ? "0" : "1");
                     dataList.setDay(compDay.replace("/", "").replace("/", ""));
 
-                    ThreadHttp threadHttp = new ThreadHttp(dataList);
+                    Threader.NewThreadHttp threadHttp = new Threader.NewThreadHttp(dataList);
                     threadHttp.start();
 //                    mainActivity.insertData(titleText, exp, statusFrag, dayText, compDay);
                     AddDisplay addDisplay = new AddDisplay();
@@ -245,14 +245,4 @@ public class NewDisplay extends Fragment implements DatePickerDialog.OnDateSetLi
 //        newFragment.show(getFragmentManager(), "datePicker");
 //    }
 
-    class ThreadHttp extends Thread {
-        DataList dataLists;
-        public ThreadHttp(DataList dataList) {
-            dataLists = dataList;
-        }
-
-        public void run() {
-            Log.d("tag", new HttpRequest().postRequest(true, dataLists));
-        }
-    }
 }
