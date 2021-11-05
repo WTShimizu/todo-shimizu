@@ -31,13 +31,14 @@ public class DeleteDisplay extends Fragment {
     private TextView compButton;
     private TextView notCompButton;
     private ListView listView;
-    protected MyListItem myListItem;
     private MainActivity mainActivity;
 
     ArrayList<Integer> ids;
     SimpleAdapter adapter;
     Handler handler;
-    int mListCount;
+    private int mListCount;
+    private int mPosition;
+    private int mYOff;
 
     public void createDelList(List<DataList> dataLists) {
         int count = 0;
@@ -55,6 +56,7 @@ public class DeleteDisplay extends Fragment {
             if (count > mListCount) {
                 break;
             }
+            count ++;
 //            mainActivity.updateId(i+1);
             StringBuilder dayMold = new StringBuilder();
             if (day == 0) {
@@ -67,7 +69,8 @@ public class DeleteDisplay extends Fragment {
 
             map =  new HashMap<>();
             map.put("title", title);
-            map.put("day", "未完了");
+            // TODO : 完了日
+            map.put("day", status == 0  ? "完了日" : "未完了");
             map.put("day2", dayMold.toString()); // 完了済み
             data.add(map);
         }
@@ -77,6 +80,10 @@ public class DeleteDisplay extends Fragment {
             public void run() {
                 adapter = new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
                 listView.setAdapter(adapter);
+                if (mPosition != 0 && mYOff != 0) {
+                    adapter.notifyDataSetChanged();
+                    listView.setSelectionFromTop(mPosition, mYOff);
+                }
             }
         });
     }
@@ -89,8 +96,6 @@ public class DeleteDisplay extends Fragment {
 
         listView = view.findViewById(R.id.deleteListView);
         ids = new ArrayList<>();
-        final String[] FROM = {"title", "day", "day2"};
-        final int[] TO = {R.id.listViewtitle, R.id.listViewSub, R.id.listViewSub2};
         handler = new Handler();
         // 初期表示List数
         mListCount = 20;
@@ -133,14 +138,12 @@ public class DeleteDisplay extends Fragment {
             @Override
             public void onScrollStateChanged(AbsListView absListView, int i) {
                 if (listView.getLastVisiblePosition() == (adapter.getCount() - 1)){
-                    int position = listView.getFirstVisiblePosition();
-                    int yOffset = listView.getChildAt(0).getTop();
+                    mPosition = listView.getFirstVisiblePosition();
+                    mYOff = listView.getChildAt(0).getTop();
                     mListCount = mListCount + 20;
                     Threader.DeleteListThreadHttp threadHttp =
                             new Threader.DeleteListThreadHttp(DeleteDisplay.this, compFrag);
                     threadHttp.start();
-                    adapter.notifyDataSetChanged();
-                    listView.setSelectionFromTop(position, yOffset);
                 }
             }
 
@@ -181,6 +184,8 @@ public class DeleteDisplay extends Fragment {
                 v.setSelected(!v.isSelected());
                 // 未完了ボタン
                 if (compFrag) {
+                    mPosition = 0;
+                    mYOff = 0;
                     compFrag = false;
                     notCompButton.setBackground(select);
                     notCompButton.setTextColor(Color.WHITE);
@@ -215,6 +220,8 @@ public class DeleteDisplay extends Fragment {
                 v.setSelected(!v.isSelected());
                 // 完了ボタン
                 if (!compFrag) {
+                    mPosition = 0;
+                    mYOff = 0;
                     compFrag = true;
                     compButton.setBackground(select);
                     compButton.setTextColor(Color.WHITE);

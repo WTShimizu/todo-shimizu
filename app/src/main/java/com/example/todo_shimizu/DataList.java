@@ -6,6 +6,7 @@ public class DataList {
     String mExp;
     String mStatus;
     String mDay;
+    String mCompleteDay;
 
     void setId(int id) {
         mId = id;
@@ -40,5 +41,12 @@ public class DataList {
     }
     String getDay() {
         return mDay;
+    }
+
+    void setCompleteDay(String day) {
+        mCompleteDay = day;
+    }
+    String getCompleteDay() {
+        return mCompleteDay;
     }
 }

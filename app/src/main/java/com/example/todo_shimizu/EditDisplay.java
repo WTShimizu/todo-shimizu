@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -16,13 +17,13 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
 import java.util.Calendar;
-import java.util.List;
 import java.util.TimeZone;
 
 import static androidx.core.content.res.ResourcesCompat.getDrawable;
@@ -43,18 +44,25 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
     EditText mTitle;
     TextView mDateButton;
     EditText mDetailsEdit;
+    Handler editHandler;
 
     public void createEdit(DataList dataList) {
-        mTitle.setText(dataList.getTitle());
-        StringBuilder dayMold = new StringBuilder();
-        if (Integer.parseInt(dataList.getStatus()) == 0) {
-            mDateButton.setText("");
-        } else {
-            dayMold.append(String.valueOf(dataList.getDay()));
-            dayMold.insert(4, "/");
-            dayMold.insert(7, "/");
-            mDateButton.setText(dayMold.toString());
-        }
+        editHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mTitle.setText(dataList.getTitle());
+                mDetailsEdit.setText(dataList.getExp());
+                StringBuilder dayMold = new StringBuilder();
+                if (Integer.parseInt(dataList.getStatus()) == 0) {
+                    mDateButton.setText("");
+                } else {
+                    dayMold.append(String.valueOf(dataList.getDay()));
+                    dayMold.insert(4, "/");
+                    dayMold.insert(7, "/");
+                    mDateButton.setText(dayMold.toString());
+                }
+            }
+        });
     }
 
     @Override
@@ -77,8 +85,9 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
         statusFrag = status;
 
         MainActivity mainActivity = (MainActivity) getActivity();
-        Threader.EditViewThreadHttp threadHttp = new Threader.EditViewThreadHttp(id, this);
+        Threader.EditViewThreadHttp threadHttp = new Threader.EditViewThreadHttp(id, this, statusFrag);
         threadHttp.start();
+        editHandler = new Handler();
 
         mTitle = view.findViewById(R.id.editTitleEdit);
         mDateButton = view.findViewById(R.id.editDateButton);
@@ -211,17 +220,18 @@ public class EditDisplay extends Fragment implements DatePickerDialog.OnDateSetL
                     dataList.setTitle(titleText);
                     dataList.setExp(exp);
                     dataList.setStatus(statusFrag ? "0" : "1");
-                    dataList.setDay(compDay.replace("/", "").replace("/", ""));
+                    dataList.setDay(dayText.replace("/", "").replace("/", ""));
+                    dataList.setCompleteDay(compDay.replace("/", "").replace("/", ""));
 
                     if (status != statusFrag) {
-                        Threader.NewThreadHttp newHttp = new Threader.NewThreadHttp(dataList);
+                        Threader.NewThreadHttp newHttp = new Threader.NewThreadHttp(dataList, statusFrag);
                         newHttp.start();
 
-                        Threader.DeleteThreadHttp deleteThreadHttp = new Threader.DeleteThreadHttp(id, status);
+                        Threader.DeleteThreadHttp deleteThreadHttp = new Threader.DeleteThreadHttp(id, statusFrag);
                         deleteThreadHttp.start();
                     } else {
                         dataList.setId(id);
-                        Threader.EditThreadHttp newHttp = new Threader.EditThreadHttp(dataList);
+                        Threader.EditThreadHttp newHttp = new Threader.EditThreadHttp(dataList, statusFrag);
                         newHttp.start();
                     }
                     AddDisplay addDisplay = new AddDisplay();

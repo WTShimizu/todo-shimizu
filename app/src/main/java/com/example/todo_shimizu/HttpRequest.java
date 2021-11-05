@@ -24,8 +24,8 @@ public class HttpRequest {
     String STORE_UNF_URL = "https://www.whaletech.work/todo-shimizu/store_unfinish.php";
     String DEL_COMP_URL = "https://www.whaletech.work/todo-shimizu/destory_complate.php";
     String DEL_UNF_URL = "https://www.whaletech.work/todo-shimizu/destory_unfinish.php";
-    String EDIT_COMP_URL = "https://www.whaletech.work/todo-shimizu/destory_complate.php";
-    String EDIT_UNF_URL = "https://www.whaletech.work/todo-shimizu/destory_unfinish.php";
+    String EDIT_COMP_URL = "https://www.whaletech.work/todo-shimizu/update_complete.php";
+    String EDIT_UNF_URL = "https://www.whaletech.work/todo-shimizu/update_unfinish.php";
     public List<DataList> getRequest(boolean frag) {
         // HttpURLConnectionの作成
         try {
@@ -96,14 +96,19 @@ public class HttpRequest {
     public String postRequest(boolean frag, DataList dataList) {
         try {
             URL url;
+            String sendDataJson;
             if (frag) {
                 url = new URL(STORE_COMP_URL);
+                sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
+                        ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
+                        + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\""
+                        + ",\"complete_at\":" + "\"" + dataList.mCompleteDay + "\"" + "}";
             } else {
                 url = new URL(STORE_UNF_URL);
+                sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
+                        ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
+                        + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\"" + "}";
             }
-            String sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
-                    ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
-                    + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\"" + "}";
 
             Log.d("tag", sendDataJson);
 
@@ -181,15 +186,19 @@ public class HttpRequest {
     public String editRequest(boolean frag, DataList dataList) {
         try {
             URL url;
+            String sendDataJson;
             if (frag) {
                 url = new URL(EDIT_COMP_URL);
+                sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
+                        ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
+                        + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\""
+                        + ",\"complete_at\":" + "\"" + dataList.mCompleteDay + "\"" + "}";
             } else {
                 url = new URL(EDIT_UNF_URL);
+                sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
+                        ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
+                        + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\"" + "}";
             }
-            String sendDataJson = "{\"id\":" + "\"" + dataList.mId + "\""
-                    + ",\"title\":" + "\"" + dataList.mTitle + "\"" +
-                    ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
-                    + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\"" + "}";
 
             Log.d("tag", sendDataJson);
 

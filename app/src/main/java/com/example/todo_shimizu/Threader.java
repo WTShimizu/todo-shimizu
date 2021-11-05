@@ -43,12 +43,14 @@ public class Threader {
 
     static class NewThreadHttp extends Thread {
         DataList dataLists;
-        public NewThreadHttp(DataList dataList) {
+        boolean mFrag;
+        public NewThreadHttp(DataList dataList, boolean b) {
             dataLists = dataList;
+            mFrag = b;
         }
 
         public void run() {
-            Log.d("tag", new HttpRequest().postRequest(true, dataLists));
+            Log.d("tag", new HttpRequest().postRequest(mFrag, dataLists));
         }
     }
 
@@ -68,13 +70,15 @@ public class Threader {
     static class EditViewThreadHttp extends Thread {
         int mId;
         EditDisplay mEdit;
-        public EditViewThreadHttp(int id, EditDisplay editDisplay) {
+        boolean mFrag;
+        public EditViewThreadHttp(int id, EditDisplay editDisplay, boolean b) {
             mId = id;
             mEdit = editDisplay;
+            mFrag = b;
         }
 
         public void run() {
-            DataList dataLists = new HttpRequest().getIdRequest(true, mId);
+            DataList dataLists = new HttpRequest().getIdRequest(mFrag, mId);
             if (dataLists != null) {
                 mEdit.createEdit(dataLists);
             }
@@ -83,12 +87,15 @@ public class Threader {
 
     static class EditThreadHttp extends Thread {
         DataList dataLists;
-        public EditThreadHttp(DataList dataList) {
+        boolean mFrag;
+        public EditThreadHttp(DataList dataList, boolean b) {
             dataLists = dataList;
+            mFrag = b;
         }
 
         public void run() {
-            Log.d("tag", new HttpRequest().editRequest(true, dataLists));
+            Log.d("tag", new HttpRequest().editRequest(mFrag, dataLists));
+
         }
     }
 }

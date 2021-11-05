@@ -19,13 +19,6 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +36,9 @@ public class AddDisplay extends Fragment {
     ArrayList<Integer> ids;
     SimpleAdapter adapter;
     Handler handler;
-    int mListCount;
+    private int mListCount;
+    private int mPosition;
+    private int mYOff;
 
     public void createList(List<DataList> dataLists) {
         int count = 0;
@@ -58,9 +53,12 @@ public class AddDisplay extends Fragment {
             String title = dataList.getTitle();
             int day = Integer.parseInt(dataList.getDay());
             int status = Integer.parseInt(dataList.getStatus());
+            int compDay = Integer.parseInt(dataList.getCompleteDay());
             if (count > mListCount) {
                 break;
             }
+            Log.d("tag", title + dataList.getExp() + status + day + compDay);
+            count ++;
 //            mainActivity.updateId(i+1);
             StringBuilder dayMold = new StringBuilder();
             if (day == 0) {
@@ -71,9 +69,23 @@ public class AddDisplay extends Fragment {
                 dayMold.insert(7, "/");
             }
 
+            StringBuilder compDayMold = new StringBuilder();
+            if (status == 0) {
+                compDayMold.append("未完了");
+            } else {
+                if (compDay == 0) {
+                    compDayMold.append("未入力");
+                } else {
+                    compDayMold.append(String.valueOf(day));
+                    compDayMold.insert(4, "/");
+                    compDayMold.insert(7, "/");
+                }
+            }
+
             map =  new HashMap<>();
             map.put("title", title);
-            map.put("day", "未完了");
+            // TODO : 完了日
+            map.put("day", compDayMold);
             map.put("day2", dayMold.toString()); // 完了済み
             data.add(map);
         }
@@ -83,6 +95,10 @@ public class AddDisplay extends Fragment {
             public void run() {
                 adapter = new SimpleAdapter(getActivity(), data, R.layout.listview, FROM, TO);
                 listView.setAdapter(adapter);
+                if (mPosition != 0 && mYOff != 0) {
+                    adapter.notifyDataSetChanged();
+                    listView.setSelectionFromTop(mPosition, mYOff);
+                }
             }
         });
     }
@@ -117,8 +133,8 @@ public class AddDisplay extends Fragment {
             @Override
             public void onScrollStateChanged(AbsListView absListView, int i) {
                 if (listView.getLastVisiblePosition() == (adapter.getCount() - 1)){
-                    int position = listView.getFirstVisiblePosition();
-                    int yOffset = listView.getChildAt(0).getTop();
+                    mPosition = listView.getFirstVisiblePosition();
+                    mYOff = listView.getChildAt(0).getTop();
 
                     mListCount = mListCount + 20;
                     Threader.AddThreadHttp threadHttp = new Threader.AddThreadHttp(AddDisplay.this, compFrag);
@@ -161,6 +177,9 @@ public class AddDisplay extends Fragment {
                 v.setSelected(!v.isSelected());
                 // 未完了ボタン
                 if (compFrag) {
+                    mPosition = 0;
+                    mYOff = 0;
+
                     compFrag = false;
                     notCompButton.setBackground(select);
                     notCompButton.setTextColor(Color.WHITE);
@@ -186,6 +205,9 @@ public class AddDisplay extends Fragment {
                 v.setSelected(!v.isSelected());
                 // 完了ボタン
                 if (!compFrag) {
+                    mPosition = 0;
+                    mYOff = 0;
+
                     compFrag = true;
                     compButton.setBackground(select);
                     compButton.setTextColor(Color.WHITE);
