@@ -53,7 +53,13 @@ public class AddDisplay extends Fragment {
             String title = dataList.getTitle();
             int day = Integer.parseInt(dataList.getDay());
             int status = Integer.parseInt(dataList.getStatus());
-            int compDay = Integer.parseInt(dataList.getCompleteDay());
+            int compDay;
+            if (dataList.getCompleteAt() != null) {
+                compDay = Integer.parseInt(dataList.getCompleteAt());
+            } else {
+                compDay = 0;
+            }
+
             if (count > mListCount) {
                 break;
             }

@@ -6,7 +6,7 @@ public class DataList {
     String mExp;
     String mStatus;
     String mDay;
-    String mCompleteDay;
+    String mCompleteAt;
 
     void setId(int id) {
         mId = id;
@@ -43,10 +43,10 @@ public class DataList {
         return mDay;
     }
 
-    void setCompleteDay(String day) {
-        mCompleteDay = day;
+    void setCompleteAt(String at) {
+        mCompleteAt = at;
     }
-    String getCompleteDay() {
-        return mCompleteDay;
+    String getCompleteAt() {
+        return mCompleteAt;
     }
 }

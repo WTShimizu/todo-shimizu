@@ -189,7 +189,6 @@ public class NewDisplay extends Fragment implements DatePickerDialog.OnDateSetLi
                     dataList.setExp(exp);
                     dataList.setStatus(statusFrag ? "0" : "1");
                     dataList.setDay(dayText.replace("/", "").replace("/", ""));
-                    dataList.setCompleteDay(compDay.replace("/", "").replace("/", ""));
 
                     Threader.NewThreadHttp threadHttp = new Threader.NewThreadHttp(dataList, statusFrag);
                     threadHttp.start();

@@ -46,6 +46,8 @@ public class HttpRequest {
             String line = "";
             while((line = reader.readLine()) != null)
                 xml.append(line);
+            
+            Log.d("tag", String.valueOf(xml));
 
             ObjectMapper jsonMapper = new ObjectMapper();
             List<DataList> dataLists = Arrays.asList(jsonMapper.readValue(xml.toString(), DataList[].class));
@@ -102,7 +104,7 @@ public class HttpRequest {
                 sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
                         ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
                         + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\""
-                        + ",\"complete_at\":" + "\"" + dataList.mCompleteDay + "\"" + "}";
+                        + ",\"complete_at\":" + "\"" + dataList.mCompleteAt + "\"" + "}";
             } else {
                 url = new URL(STORE_UNF_URL);
                 sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
@@ -192,7 +194,7 @@ public class HttpRequest {
                 sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
                         ",\"exp\":" + "\"" + dataList.mExp + "\"" +",\"status\":" + "\"" + dataList.mStatus
                         + "\"" + ",\"day\":" + "\"" + dataList.mDay + "\""
-                        + ",\"complete_at\":" + "\"" + dataList.mCompleteDay + "\"" + "}";
+                        + ",\"complete_at\":" + "\"" + dataList.mCompleteAt + "\"" + "}";
             } else {
                 url = new URL(EDIT_UNF_URL);
                 sendDataJson = "{\"title\":" + "\"" + dataList.mTitle + "\"" +
